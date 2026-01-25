@@ -14,7 +14,7 @@ public class ReusableHttpClientInterfaceTests
     {
         // Arrange
         TestResponse expectedResult = new TestResponse { Id = 1, Name = "Test" };
-        _reusableHttpClient.GetAsync<TestResponse>("api/test")!.Returns(Task.FromResult(expectedResult));
+        _reusableHttpClient.GetAsync<TestResponse>("api/test", Arg.Any<CancellationToken>())!.Returns(Task.FromResult(expectedResult));
 
         // Act
         TestResponse? result = await _reusableHttpClient.GetAsync<TestResponse>("api/test");
@@ -29,7 +29,7 @@ public class ReusableHttpClientInterfaceTests
         // Arrange
         TestRequest payload = new TestRequest { Name = "Test" };
         string expectedResult = "Success";
-        _reusableHttpClient.PostAsync("api/test", payload).Returns(Task.FromResult(expectedResult));
+        _reusableHttpClient.PostAsync("api/test", payload, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
 
         // Act
         string result = await _reusableHttpClient.PostAsync("api/test", payload);
@@ -44,7 +44,7 @@ public class ReusableHttpClientInterfaceTests
         // Arrange
         TestRequest payload = new TestRequest { Name = "Test" };
         TestResponse expectedResult = new TestResponse { Id = 1, Name = "Test" };
-        _reusableHttpClient.PostAsync<TestRequest, TestResponse>("api/test", payload)!.Returns(
+        _reusableHttpClient.PostAsync<TestRequest, TestResponse>("api/test", payload, Arg.Any<CancellationToken>())!.Returns(
             Task.FromResult(expectedResult));
 
         // Act
@@ -60,7 +60,7 @@ public class ReusableHttpClientInterfaceTests
         // Arrange
         TestRequest payload = new TestRequest { Name = "Test" };
         string expectedResult = "Success";
-        _reusableHttpClient.PatchAsync("api/test", payload).Returns(Task.FromResult(expectedResult));
+        _reusableHttpClient.PatchAsync("api/test", payload, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
 
         // Act
         string result = await _reusableHttpClient.PatchAsync("api/test", payload);
@@ -75,7 +75,7 @@ public class ReusableHttpClientInterfaceTests
         // Arrange
         TestRequest payload = new TestRequest { Name = "Test" };
         TestResponse expectedResult = new TestResponse { Id = 1, Name = "Test" };
-        _reusableHttpClient.PatchAsync<TestRequest, TestResponse>("api/test", payload)!.Returns(
+        _reusableHttpClient.PatchAsync<TestRequest, TestResponse>("api/test", payload, Arg.Any<CancellationToken>())!.Returns(
             Task.FromResult(expectedResult));
 
         // Act
@@ -91,7 +91,7 @@ public class ReusableHttpClientInterfaceTests
         // Arrange
         TestRequest payload = new TestRequest { Name = "Test" };
         string expectedResult = "Success";
-        _reusableHttpClient.PutAsync("api/test", payload).Returns(Task.FromResult(expectedResult));
+        _reusableHttpClient.PutAsync("api/test", payload, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
 
         // Act
         string result = await _reusableHttpClient.PutAsync("api/test", payload);
@@ -106,7 +106,7 @@ public class ReusableHttpClientInterfaceTests
         // Arrange
         TestRequest payload = new TestRequest { Name = "Test" };
         TestResponse expectedResult = new TestResponse { Id = 1, Name = "Test" };
-        _reusableHttpClient.PutAsync<TestRequest, TestResponse>("api/test", payload)!.Returns(
+        _reusableHttpClient.PutAsync<TestRequest, TestResponse>("api/test", payload, Arg.Any<CancellationToken>())!.Returns(
             Task.FromResult(expectedResult));
 
         // Act
@@ -121,7 +121,7 @@ public class ReusableHttpClientInterfaceTests
     {
         // Arrange
         string expectedResult = "Success";
-        _reusableHttpClient.DeleteAsync("api/test").Returns(Task.FromResult(expectedResult));
+        _reusableHttpClient.DeleteAsync("api/test", Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
 
         // Act
         string result = await _reusableHttpClient.DeleteAsync("api/test");
@@ -136,7 +136,7 @@ public class ReusableHttpClientInterfaceTests
         // Arrange
         TestRequest payload = new TestRequest { Name = "Test" };
         string expectedResult = "Success";
-        _reusableHttpClient.DeleteAsync("api/test", payload).Returns(Task.FromResult(expectedResult));
+        _reusableHttpClient.DeleteAsync("api/test", payload, Arg.Any<CancellationToken>()).Returns(Task.FromResult(expectedResult));
 
         // Act
         string result = await _reusableHttpClient.DeleteAsync("api/test", payload);

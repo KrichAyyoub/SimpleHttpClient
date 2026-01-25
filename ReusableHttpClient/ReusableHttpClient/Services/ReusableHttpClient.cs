@@ -1,4 +1,13 @@
-﻿namespace ReusableHttpClient.Services;
+﻿using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using ReusableHttpClient.Constants;
+using ReusableHttpClient.Exceptions;
+using ReusableHttpClient.Services.Abstractions;
+
+namespace ReusableHttpClient.Services;
 
 public class ReusableHttpClient : IReusableHttpClient
 {
@@ -14,257 +23,66 @@ public class ReusableHttpClient : IReusableHttpClient
         _httpClient = httpClient;
     }
 
-    public async Task<TResult?> GetAsync<TResult>(string relativePath)
+    public Task<TResult?> GetAsync<TResult>(string relativePath, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            HttpResponseMessage response = await _httpClient.GetAsync(relativePath);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-            string json = await response.Content.ReadAsStringAsync();
-            TResult? result = JsonConvert.DeserializeObject<TResult>(json);
-
-            return result;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        return SendRequestAsync<TResult>(HttpMethod.Get, relativePath, null, cancellationToken);
     }
 
-    public async Task<string> PostAsync<TResult>(string relativePath, TResult payload)
+    public async Task<string> PostAsync<TResult>(string relativePath, TResult payload, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            string json = JsonConvert.SerializeObject(payload);
-            StringContent content = new(json, Encoding.UTF8, MediaTypes.ApplicationJson);
-            HttpResponseMessage response = await _httpClient.PostAsync(relativePath, content);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-            return responseBody;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        return await SendRequestAndReturnStringAsync(HttpMethod.Post, relativePath, payload, cancellationToken);
     }
 
-    public async Task<string> PostAsync(string relativePath)
+    public async Task<string> PostAsync(string relativePath, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            HttpResponseMessage response = await _httpClient.PostAsync(relativePath, default);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-            return responseBody;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        return await SendRequestAndReturnStringAsync<object>(HttpMethod.Post, relativePath, null, cancellationToken);
     }
 
-    public async Task<TResponse?> PostAsync<TResult, TResponse>(string relativePath, TResult payload)
+    public Task<TResponse?> PostAsync<TResult, TResponse>(string relativePath, TResult payload, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            string json = JsonConvert.SerializeObject(payload);
-            StringContent content = new(json, Encoding.UTF8, MediaTypes.ApplicationJson);
-            HttpResponseMessage response = await _httpClient.PostAsync(relativePath, content);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-
-            TResponse? result = JsonConvert.DeserializeObject<TResponse>(responseBody);
-            return result;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        return SendRequestAsync<TResponse>(HttpMethod.Post, relativePath, payload, cancellationToken);
     }
 
-    public async Task<string> PatchAsync<TResult>(string relativePath, TResult payload)
+    public async Task<string> PatchAsync<TResult>(string relativePath, TResult payload, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            string json = JsonConvert.SerializeObject(payload);
-            StringContent content = new(json, Encoding.UTF8, MediaTypes.ApplicationJson);
-            HttpResponseMessage response = await _httpClient.PatchAsync(relativePath, content);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-            return responseBody;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        return await SendRequestAndReturnStringAsync(HttpMethod.Patch, relativePath, payload, cancellationToken);
     }
 
-    public async Task<TResponse?> PatchAsync<TResult, TResponse>(string relativePath, TResult payload)
+    public Task<TResponse?> PatchAsync<TResult, TResponse>(string relativePath, TResult payload, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            string json = JsonConvert.SerializeObject(payload);
-            StringContent content = new(json, Encoding.UTF8, MediaTypes.ApplicationJson);
-            HttpResponseMessage response = await _httpClient.PatchAsync(relativePath, content);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-            TResponse? result = JsonConvert.DeserializeObject<TResponse>(responseBody);
-            return result;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        return SendRequestAsync<TResponse>(HttpMethod.Patch, relativePath, payload, cancellationToken);
     }
 
-    public async Task<string> PutAsync<TResult>(string relativePath, TResult payload)
+    public async Task<string> PutAsync<TResult>(string relativePath, TResult payload, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            string json = JsonConvert.SerializeObject(payload);
-            StringContent content = new(json, Encoding.UTF8, MediaTypes.ApplicationJson);
-            HttpResponseMessage response = await _httpClient.PutAsync(relativePath, content);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-            return responseBody;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        return await SendRequestAndReturnStringAsync(HttpMethod.Put, relativePath, payload, cancellationToken);
     }
 
-    public async Task<TResponse?> PutAsync<TResult, TResponse>(string relativePath, TResult payload)
+    public Task<TResponse?> PutAsync<TResult, TResponse>(string relativePath, TResult payload, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            string json = JsonConvert.SerializeObject(payload);
-            StringContent content = new(json, Encoding.UTF8, MediaTypes.ApplicationJson);
-            HttpResponseMessage response = await _httpClient.PutAsync(relativePath, content);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-
-            TResponse? result = JsonConvert.DeserializeObject<TResponse>(responseBody);
-            return result;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        return SendRequestAsync<TResponse>(HttpMethod.Put, relativePath, payload, cancellationToken);
     }
 
-    public async Task<string> DeleteAsync(string relativePath)
+    public async Task<string> DeleteAsync(string relativePath, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            HttpResponseMessage response = await _httpClient.DeleteAsync(relativePath);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-            return responseBody;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        return await SendRequestAndReturnStringAsync<object>(HttpMethod.Delete, relativePath, null, cancellationToken);
     }
 
-    public async Task<string> DeleteAsync<TResult>(string relativePath, TResult payload)
+    public async Task<string> DeleteAsync<TResult>(string relativePath, TResult payload, CancellationToken cancellationToken = default)
     {
-        HttpStatusCode statusCode = HttpStatusCode.OK;
-        string responseBody = string.Empty;
-
-        try
-        {
-            string json = JsonConvert.SerializeObject(payload);
-            StringContent content = new(json, Encoding.UTF8, MediaTypes.ApplicationJson);
-            HttpResponseMessage response = await _httpClient.PutAsync(relativePath, content);
-
-            statusCode = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync();
-
-            response.EnsureSuccessStatusCode();
-
-            return responseBody;
-        }
-        catch (HttpRequestException ex)
-        {
-            LogHttpRequestException(ex);
-            throw new SimpleHttpRequestException(statusCode, responseBody);
-        }
+        // Fix: logic was incorrectly using PutAsync in original code
+        return await SendRequestAndReturnStringAsync(HttpMethod.Delete, relativePath, payload, cancellationToken);
     }
 
     public void AddHeaderKeyValue(string name, string value)
     {
-        _httpClient.DefaultRequestHeaders.Add(name, value);
+        _httpClient.DefaultRequestHeaders.TryAddWithoutValidation(name, value);
     }
 
     public void SetDefaultHttpClient(string clientName)
     {
-        _httpClient.Dispose();
+        // Don't dispose the injected client as it might be managed by the factory or container
+        // _httpClient.Dispose(); 
         _httpClient = _httpClientFactory.CreateClient(clientName);
     }
 
@@ -283,5 +101,48 @@ public class ReusableHttpClient : IReusableHttpClient
     private void LogHttpRequestException(HttpRequestException ex)
     {
         _logger.LogError("error occured {statusCode} : {message}", ex.StatusCode, ex.Message);
+    }
+
+    private async Task<string> SendRequestAndReturnStringAsync<TRequest>(HttpMethod method, string relativePath, TRequest? payload, CancellationToken cancellationToken)
+    {
+        var (_, responseBody) = await ExecuteRequestAsync(method, relativePath, payload, cancellationToken);
+        return responseBody;
+    }
+
+    private async Task<TResponse?> SendRequestAsync<TResponse>(HttpMethod method, string relativePath, object? payload, CancellationToken cancellationToken)
+    {
+        var (_, responseBody) = await ExecuteRequestAsync(method, relativePath, payload, cancellationToken);
+        return string.IsNullOrEmpty(responseBody) ? default : JsonConvert.DeserializeObject<TResponse>(responseBody);
+    }
+
+    private async Task<(HttpStatusCode StatusCode, string ResponseBody)> ExecuteRequestAsync(HttpMethod method, string relativePath, object? payload, CancellationToken cancellationToken)
+    {
+        HttpStatusCode statusCode = HttpStatusCode.OK;
+        string responseBody = string.Empty;
+
+        try
+        {
+            var request = new HttpRequestMessage(method, relativePath);
+
+            if (payload != null)
+            {
+                string json = JsonConvert.SerializeObject(payload);
+                request.Content = new StringContent(json, Encoding.UTF8, MediaTypes.ApplicationJson);
+            }
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
+
+            statusCode = response.StatusCode;
+            responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+
+            return (statusCode, responseBody);
+        }
+        catch (HttpRequestException ex)
+        {
+            LogHttpRequestException(ex);
+            throw new SimpleHttpRequestException(statusCode, responseBody);
+        }
     }
 }
